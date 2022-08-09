@@ -5,15 +5,19 @@ using UnityEngine;
 public class DragPlayer : MonoBehaviour
 {
     private bool _isPressed = false;
+    private bool _mouseUp = false;
 
     [SerializeField] private GameObject _player;
+    [SerializeField] private GameObject _sling;
     [SerializeField] private float _releaseDelay;
 
     private SpringJoint _playerSpringJoint;
+    private Rigidbody _playerRigidbody;
 
     private void Awake()
     {
         _playerSpringJoint = _player.GetComponent<SpringJoint>();
+        _playerRigidbody = _player.GetComponent<Rigidbody>();
 
         _releaseDelay = 1 / 4;
     }
@@ -30,7 +34,11 @@ public class DragPlayer : MonoBehaviour
         if (_isPressed)
         {
             _DragPlayer();
-        }    
+        }
+        else if(_mouseUp && _playerSpringJoint)
+        {
+            _ReleasePlayer();
+        }
     }
 
     private void _DragPlayer()
@@ -47,17 +55,26 @@ public class DragPlayer : MonoBehaviour
     {
         Debug.Log("Mouse Pressed");
         _isPressed = true;
+        _playerRigidbody.useGravity = false;
+        _player.GetComponent<SphereCollider>().enabled = false;
     }
 
     private void OnMouseUp()
     {
         Debug.Log("Mouse Released");
+        _player.GetComponent<SphereCollider>().enabled = true;
+        _playerRigidbody.useGravity = true;
         _isPressed = false;
-        StartCoroutine(_ReleasePlayer());
+        _mouseUp = true;
     }
 
-    private IEnumerator _ReleasePlayer()
+    private void _ReleasePlayer()
     {
-        yield return new WaitForSeconds(_releaseDelay);
+        if (_playerSpringJoint.transform.position.x >= _sling.transform.position.x)
+        {
+            Destroy(_playerSpringJoint);
+            
+            
+        }
     }
 }
